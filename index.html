@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html ng-app="teacherApp">
+<head>
+    <title>Teacher List</title>
+	<meta charset="utf-8">
+    <link href="bootstrap.css" rel="stylesheet" />
+    <link href="bootstrap-theme.css" rel="stylesheet" />
+	<link href="css/animate.min.css" rel="stylesheet" />
+    <script src="angular.min.js"></script>
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<script src="js/jquery.lettering.js"></script>
+	<script src="js/jquery.textillate.js"></script>
+    <script>
+		//>>> Набор групп
+		var model = [{name:"ЭМС-00-1",number:0,selected:false,vis:true},
+					{name:"ЭМС-00-2",number:1,selected:false,vis:true},
+					{name:"ЭМС-00-3",number:2,selected:false,vis:true},
+					{name:"ЭМС-00-4",number:3,selected:true,vis:true}];
+		//>>> Набор студентов
+		var modelEnum = [{lname:"Иванов",name:"Иван",patronymic:"Иванович",mark:100,vis:true,number:0},
+						{lname:"Петров",name:"Петр",patronymic:"Петрович",mark:10,vis:true,number:0},
+						{lname:"Сидоров",name:"Сидор",patronymic:"Сидорович",mark:900,vis:true,number:0},
+						{lname:"Михайлов",name:"Михаил",patronymic:"Михайлович",mark:75,vis:true,number:0},
+						
+						{lname:"Романенко",name:"Юрий",patronymic:"Николаевич",mark:100,vis:true,number:1},
+						{lname:"Галышак",name:"Марьян",patronymic:"Иванович",mark:10,vis:true,number:1},
+						{lname:"Щерба",name:"Денис",patronymic:"Александрович",mark:900,vis:true,number:1},
+						
+						{lname:"Калашник",name:"Алексей",patronymic:"Александрович",mark:100,vis:true,number:2},
+						{lname:"Фоменко",name:"Стасьян",patronymic:"Александрович",mark:10,vis:true,number:2},
+						
+						{lname:"Сошевский",name:"Александр",patronymic:"Владимирович",mark:100,vis:true,number:3},
+						{lname:"Барбашин",name:"Александр",patronymic:"Геннадиевич",mark:10,vis:true,number:3}];
+		//>>> Обьявление модуля
+		var teacherApp = angular.module("teacherApp", []);
+		//>>> Обьявление контроллера
+		teacherApp.controller("teacherAppCtrl", function ($scope) {
+			//var buttonOpt = document.getElementById("buttonOpt");
+			var button = document.getElementById("button");
+			$scope.group = model;	//>>> Перенести данные о группах в скоуп
+			$scope.groupN = $scope.group.length;
+			$scope.enum = modelEnum;	//>>> Перенести данные о студентах
+			$scope.signShowOpt = false;
+			$scope.boolEditGroup = $scope.boolAddGroup = true;
+			$scope.showNewNameEditing = false;
+			$scope.showNewNameAdding = false;
+			$scope.showNewDataStudentAdding = false;
+			$scope.showNewAddingStudent = false;
+			$scope.labelEdit = "Редактировать выбранную группу";
+			$scope.labelAddGroup = "Добавить новую группу";
+			$scope.labelAddStudent = "Открыть поля ввода для добавления нового студента";
+			$scope.matchPattern = new RegExp("[А-Я]{2,3}-[0-9]{2}-[0-9]");
+			
+//=====================	Блок обработки групп
+
+			//--> Функция для определения видимых данных
+			$scope.visi = function (p) {
+				$scope.vis =[];
+				angular.forEach(p, function (item) {
+					if (item.vis) { $scope.vis.push(item) }
+				});
+				return $scope.vis;
+			}
+			
+			$scope.group = $scope.visi($scope.group);	// запуск visi для массива групп
+			
+			//--> Функция для определения выбранной группы для селекта
+			$scope.init = function () {
+				angular.forEach($scope.group, function (item) {
+					if (item.selected) { 
+						count = item; 
+					}
+				});
+				return count;
+			}
+			
+			$scope.selected = $scope.init();	// Инициализируем селект
+			
+			//--> Действия при изменении селекта
+			$scope.change = function () {
+				$scope.signShowOpt = false;
+				if ($scope.showNewNameEditing) {
+					$scope.showNewNameEditing = !$scope.showNewNameEditing;
+					$scope.labelEdit = "Редактировать выбранную группу";
+				}
+				if ($scope.showNewNameAdding) {
+					$scope.showNewNameAdding = !$scope.showNewNameAdding;
+					$scope.labelAddGroup = "Добавить новую группу";
+				}
+			}
+			
+			//--> При нажатии на кнопку Опции открыть возможные действия с группами
+			$scope.showOpt = function () {
+				$scope.signShowOpt = true;
+			}
+			
+			//--> Удаление группы
+			$scope.deleteGroup = function (selected) {
+				angular.forEach($scope.group, function (item) {
+					if (item.number == $scope.selected.number) { 
+						item.vis = false; $scope.selected.number = -1;
+					}
+				});
+				$scope.group = $scope.visi($scope.group);
+				$scope.signUnn = true;
+				console.log($scope.group);
+				$scope.showNewNameEditing = false;
+				$scope.labelEdit = "Редактировать выбранную группу";
+				$scope.showNewNameAdding = false;
+				$scope.labelAddGroup = "Добавить новую группу";
+				$scope.selected.name = "ни одной не выбрано";
+				button.disabled = true;
+				$scope.signShowOpt = false;	// Закрыть действия с группами
+			}
+			
+			//--> При пустом значении в селекте запретить кнопку ввода нового студента
+			$scope.sel = function () {
+				if ($scope.selected.name == "ни одной не выбрано") {
+					button.disabled = true;
+					$scope.signUnn = false;
+					//buttonOpt.disabled = true;
+				} else {
+					button.disabled = false;
+					$scope.signUnn = true;
+					//buttonOpt.disabled = false;
+				}
+			}
+			
+			//--> Открыть Редактирование группы
+			$scope.editGroup = function (selected) {
+				if ($scope.showNewNameAdding) {
+					$scope.showNewNameAdding = false;
+					$scope.labelAddGroup = "Добавить новую группу";
+				}
+				if($scope.showNewNameEditing == false) {
+					$scope.showNewNameEditing = true;
+					$scope.labelEdit = "Скрыть без редактирования";
+				} else {
+					$scope.showNewNameEditing = false;
+					$scope.labelEdit = "Редактировать выбранную группу";
+				}
+			}
+			
+			//--> ВАЛИДАЦИЯ для названий групп
+			//--> Внести изменения по завершению редактирования названия группы
+			$scope.finEditGroup = function (isvalid) {
+				if (isvalid) {
+					angular.forEach($scope.group, function (item) {
+						if (typeof $scope.nameEdit != "undefined" && item.number == $scope.selected.number) { 
+							item.name = $scope.nameEdit;
+							$scope.selected = item;
+						}
+					});
+					if ($scope.showNewNameEditing) {
+						$scope.showNewNameEditing = !$scope.showNewNameEditing;
+						$scope.labelEdit = "Редактировать выбранную группу";
+					}
+					$scope.signShowOpt = false;
+                    $scope.nameEdit = "";
+                } else {
+					$scope.showErrorEdit = true;
+				}
+            }
+			
+			//--> Открыть Добавление новой группы
+			$scope.addNewGroup = function () {
+				if ($scope.showNewNameEditing) {
+					$scope.showNewNameEditing = false;
+					$scope.labelEdit = "Редактировать выбранную группу";
+				}
+				if ($scope.showNewNameAdding == false) {
+					$scope.showNewNameAdding = true;
+					$scope.labelAddGroup = "Скрыть без добавления";
+				} else {
+					$scope.showNewNameAdding = false;
+					$scope.labelAddGroup = "Добавить новую группу";
+				}
+				//$scope.boolAddGroup = !$scope.boolAddGroup;
+			}
+
+			//--> ВАЛИДАЦИЯ для названий групп
+			//--> Внести изменения по завершению добавления названия новой группы
+			$scope.finAddNewGroup = function (newGroup,isvalid) {
+				if (isvalid) {
+					$scope.group.push({ name: newGroup, number: $scope.group.length, selected: false, vis: true });
+					$scope.showNewNameAdding = false;	// Закрыть поле ввода
+					$scope.labelAddGroup = "Добавить новую группу";
+					//$scope.boolAddGroup = !$scope.boolAddGroup;
+					$scope.selected = $scope.group[$scope.group.length-1];
+					$scope.signShowOpt = false;
+					$scope.newGroup = "";
+				} else {
+					$scope.showErrorAdd = true;
+				}
+				console.log($scope.group);
+			}
+
+			//--> Функция для показа сообщения при валидации
+			$scope.getError = function (error) {
+                if (angular.isDefined(error)) {
+                    if (error.required) {
+                        return "Поле не должно быть пустым";
+                    } if (error.pattern) {
+                        return "Введите правильный формат группы: ААА-NN-N";
+                    }
+                }
+            }
+	
+			//--> Функции для отображения в шапке для таблицы студентов
+			$scope.incompleteCount = function () {
+				var count = 0;
+					angular.forEach($scope.group, function (item) {
+						if (item) { count++ }
+					});
+				//count ? $scope.mode = "show" : $scope.mode = "";
+				return count;
+			}
+
+			$scope.warningLevel = function () {
+				return $scope.incompleteCount() < 2 ? "label-warning" : "label-success";
+			}
+			
+//=====================	Блок обработки студентов	
+			
+			//--> Фильтр для вывода списка студентов
+			$scope.selectItems = function (item) {
+				return item.number == $scope.selected.number && typeof item.number !== 'undefined';
+			}
+		
+			//--> Обработка клика для редактирования записи студента
+			$scope.editStudent = function (lname,name,patronymic,mark) {
+				$scope.showNewDataStudentEditing = true;	// Показать поля для редактирования
+				$scope.oldlname = lname;
+				$scope.oldname = name;
+				$scope.oldpatronymic = patronymic;
+				$scope.oldmark = mark;
+			}
+			
+			//--> Внести изменения по завершению редактирования записи студента
+			$scope.finEditStudent = function () {
+				$scope.showNewDataStudentEditing = false;
+				if($scope.editLname != $scope.oldlname && typeof $scope.editLname != 'undefined') {
+					angular.forEach($scope.enum, function (item) {
+						if (item.lname == $scope.oldlname) { item.lname = $scope.editLname;}
+					});
+					delete $scope.editLname;
+				}
+				if($scope.editName != $scope.oldname && typeof $scope.editName != 'undefined') {
+					angular.forEach($scope.enum, function (item) {
+						if (item.name == $scope.oldname) { item.name = $scope.editName;	}
+					});
+					delete $scope.editName;
+				}
+				if($scope.editPatronymic != $scope.oldpatronymic && typeof $scope.editPatronymic != 'undefined') {
+					angular.forEach($scope.enum, function (item) {
+						if (item.patronymic == $scope.oldpatronymic) { item.patronymic = $scope.editPatronymic;}
+					});
+					delete $scope.editPatronymic;
+				}
+				if($scope.editMark != $scope.oldmark && typeof $scope.editMark != 'undefined') {
+					angular.forEach($scope.enum, function (item) {
+						if (item.mark == $scope.oldmark) { item.mark = $scope.editMark;}
+					});
+					delete $scope.editMark;
+				}
+				document.getElementById("w1").value='';
+				document.getElementById("w2").value='';
+				document.getElementById("w3").value='';
+				document.getElementById("w4").value=''
+			}
+			
+			//--> Удалить студента
+			$scope.deleteStudent = function (lname,name,patronymic) {
+				angular.forEach($scope.enum, function (item) {
+					if (item.lname == lname && item.name == name && item.patronymic == patronymic) { 
+						item.vis = false;  
+					}
+				});
+				$scope.enum = $scope.visi($scope.enum);
+			}
+			
+			//--> Открыть поля для добавления нового студента
+			$scope.addNewStudent = function () {
+				if ($scope.showNewAddingStudent) {
+					$scope.showNewAddingStudent = false;
+					$scope.labelAddStudent = "Открыть поля ввода для добавления нового студента";
+					
+				} else {
+					$scope.showNewAddingStudent =true;
+					$scope.labelAddStudent = "Скрыть поля ввода без добавления нового студента";
+				}
+			}
+			
+			//--> Завершить добавление нового студента
+			$scope.finAddStudent = function (newlname,newname,newpatronymic,newmark) {
+				$scope.enum.push({lname:newlname, name:newname, patronymic:newpatronymic, mark:newmark, vis:true,number:$scope.selected.number});
+			}
+		
+        });
+    </script>
+	<style>
+		div.error {
+            color: red;
+            font-weight: bold;
+        }
+	</style>
+</head>
+<body ng-controller="teacherAppCtrl">
+<div class="container">
+	<div class="page-header">
+        <h1 class="tlt" data-out-effect="fadeOut" data-out-shuffle="true" style="text-align:center">
+            Помощник преподавателя
+        </h1>
+        <h3 style="text-align:justify;position:fixed;width:50px;height:50px;top:0px;right:0px;margin-top:0px;" title="Это SPA-приложение написано при помощи AngularJS и предназначено для редактирования существующих названий групп студентов, добавления новых и удаления ненужных. Для каждого студента в группе реализован функционал редактирования фамилии, имени, отчества и оценки, а также добавление и удаление этих записей. Для редактирования информации о студенте просто кликните в строке с его данными. В коде применяется так называемый контроллер-монолит.">
+			<img src="help.png">
+		</h3>
+    </div>
+</div>
+<div class="container">
+	<div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="well">
+			    <div class="form-group" style="overflow:hidden;">
+                    <label for="actionText" style="display:block;">Выбрать группу:</label>
+					<select class="form-control" id="actionText" ng-options="item as item.name for item in group track by item.number" ng-model="selected" ng-selected="sel()" ng-change="change()" style="padding-right:10px;float:left;width:46%;"></select>
+					<button class="btn btn-block btn-info" ng-click="showOpt()" style="float:left;width:46%;margin-left:21px;" ng-show="!signShowOpt">Опции</button>
+				</div>
+				<div class="form-group" ng-show="signShowOpt"><div ng-show="signUnn">
+					<button class="btn btn-block btn-danger" ng-click="deleteGroup(selected)">Удалить выбранную группу</button>
+					<button class="btn btn-block btn-warning" ng-click="editGroup(selected)" ng-show="!showNewNameEditing">{{labelEdit}}</button>
+					<div ng-show="showNewNameEditing">
+						<form name="myFormEdit" novalidate ng-submit="finEditGroup(myFormEdit.$valid)">
+							<label for="w">Введите новое название: 
+								<input name="userName" class="form-control" type="text" id="w" value="{{selected.name}}" ng-model="nameEdit" required ng-pattern="matchPattern"/>
+							</label>
+							<div class="error" ng-show="showErrorEdit">
+								{{getError(myFormEdit.userName.$error)}}
+							</div>
+							<button type="submit" class="btn btn-block btn-primary">Закончить редактирование</button>
+						</form>
+					</div></div>
+					<button class="btn btn-block btn-success" style="margin-top: 5px" ng-click="addNewGroup()" ng-show="!showNewNameAdding">{{labelAddGroup}}</button>
+						<div ng-show="showNewNameAdding">
+							<form name="myFormAdd" novalidate ng-submit="finAddNewGroup(newGroup,myFormAdd.$valid)">
+								<label for="w">Введите название новой группы: 
+									<input name="userName" class="form-control" type="text" id="w" ng-model="newGroup" required ng-pattern="matchPattern" />
+								</label>
+								<div class="error" ng-show="showErrorAdd">
+									{{getError(myFormAdd.userName.$error)}}
+								</div>
+								<button type="submit" class="btn btn-block btn-primary">Закончить добавление группы</button>
+							</form>
+						</div>
+				</div>
+			</div>
+        </div>
+        
+				
+    </div>
+</div>
+<div class="container" ng-show="signUnn">
+	<div class="row">
+		<div class="panel-primary">
+            <div class="panel-heading">
+                <div class="panel-title">
+                    <h3 class="text-center">
+                        Выбрана группа {{selected.name}} из
+						<span class="label label-default" ng-class="warningLevel()" >
+							{{incompleteCount()}}
+						</span>
+                    </h3>
+                </div>
+            </div>
+            <table class="table">
+				<thead style="background: #fc0">
+					<tr>
+						<td>Фамилия</td>
+						<td>Имя</td>
+						<td>Отчество</td>
+						<td>Оценка</td>
+						<td>Действие</td>
+					</tr>
+				</thead>
+                <tbody>
+					<tr ng-show="showNewDataStudentEditing">
+                        <td><input class="form-control" type="text" id="w1" value="" placeholder="{{oldlname}}" ng-model="editLname" /></td>
+						<td><input class="form-control" type="text" id="w2" value="" placeholder="{{oldname}}" ng-model="editName" /></td>
+                        <td><input class="form-control" type="text" id="w3" value="" placeholder="{{oldpatronymic}}" ng-model="editPatronymic" /></td>
+						<td><input class="form-control" type="text" id="w4" value="" placeholder="{{oldmark}}" ng-model="editMark" /></td>
+                        <td><button class="btn btn-block btn-warning" ng-click="finEditStudent()">Редакцию закончить</button></td>
+                    </tr>
+					<tr ng-repeat="item in enum | filter : selectItems">
+                        <td ng-click="editStudent(item.lname,item.name,item.patronymic,item.mark)">{{item.lname}}</td>
+						<td ng-click="editStudent(item.lname,item.name,item.patronymic,item.mark)">{{item.name}}</td>
+                        <td ng-click="editStudent(item.lname,item.name,item.patronymic,item.mark)">{{item.patronymic}}</td>
+						<td ng-click="editStudent(item.lname,item.name,item.patronymic,item.mark)">{{item.mark}}</td>
+                        <td><button class="btn btn-block btn-danger text-center" style="width:35%;" ng-click="deleteStudent(item.lname,item.name,item.patronymic)"><img src="delete.png" style="height:20px;"></button></td>
+                    </tr>
+					<tr ng-show="showNewAddingStudent">
+                        <td><input class="form-control" type="text" id="v1" value="" placeholder="" ng-model="newlname" /></td>
+						<td><input class="form-control" type="text" id="v2" value="" placeholder="" ng-model="newname" /></td>
+                        <td><input class="form-control" type="text" id="v3" value="" placeholder="" ng-model="newpatronymic" /></td>
+						<td><input class="form-control" type="text" id="v4" value="" placeholder="" ng-model="newmark" /></td>
+                        <td><button class="btn btn-block btn-primary" id="button" ng-click="finAddStudent(newlname,newname,newpatronymic,newmark)">Внести изменения</button></td>
+					</tr>
+                </tbody>
+            </table>
+			<button class="btn btn-block btn-success" ng-click="addNewStudent()">{{labelAddStudent}}</button>
+        </div>
+	</div>
+</div>
+<script>
+$(function () {
+ $('.tlt').textillate({in:{ effect:'fadeInRightBig',delay:300},out:{effect:'fadeOut'},minDisplayTime: 2000 });
+})
+</script>
+</body>
+</html>
+
